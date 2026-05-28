@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SDK + accept licenses
+      - name: Setup SDK + licenses
         run: |
           export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
@@ -22,13 +22,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Gradle wrapper
-        run: gradle wrapper --gradle-version 7.5
+      - name: Download Gradle 7.5
+        run: |
+          curl -sLO "https://services.gradle.org/distributions/gradle-7.5-bin.zip"
+          unzip -qo gradle-7.5-bin.zip
+          echo "$PWD/gradle-7.5/bin" >> $GITHUB_PATH
 
       - name: Build APK
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease
+        run: gradle assembleRelease
 
       - name: Sign APK
         run: |
