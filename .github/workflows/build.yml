@@ -1,0 +1,41 @@
+name: Build APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Generate wrapper
+        run: |
+          cd $GITHUB_WORKSPACE
+          gradle wrapper --gradle-version 7.5
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          keytool -genkey -v -keystore release.jks -alias wxforward -keyalg RSA -keysize 2048 -validity 36500 \
+            -storepass naso123 -keypass naso123 \
+            -dname "CN=Naso, OU=Dev, O=WxForward, L=NN, ST=GX, C=CN" 2>/dev/null
+          $ANDROID_HOME/build-tools/30.0.3/apksigner sign --ks release.jks --ks-pass pass:naso123 \
+            --key-pass pass:naso123 app/build/outputs/apk/release/app-release-unsigned.apk
+          mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/wxforward-signed.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: wxforward-apk
+          path: app/build/outputs/apk/release/wxforward-signed.apk
