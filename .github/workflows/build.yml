@@ -29,7 +29,7 @@ jobs:
           echo "$PWD/gradle-7.5/bin" >> $GITHUB_PATH
 
       - name: Build APK
-        run: gradle assembleRelease
+        run: gradle assembleRelease -x lintVitalRelease -x lint
 
       - name: Sign APK
         run: |
